@@ -152,8 +152,6 @@ class Invaders:
             if len(self.coordinates) > 1:
                 if len(self.coordinates[-1]) < 11:
                     self.check_position()
-                    print(self.bullet_pos[:5])
-                    print(self.coordinates[-1][:5])
         
     def shoot_bullets(self):
         if self.coordinates:
@@ -171,6 +169,15 @@ class Invaders:
                 bullet[1] += 10
                 if bullet[1] + 20 >= 650:
                     self.bullets.remove(bullet)
+
+def display_game_over_msg():
+    pygame.draw.rect(win, (255, 255, 255), (350, 10, 230, 150))
+    pygame.draw.rect(win, green, (350, 10, 230, 30))
+    win.blit(text.render("GAME OVER!", False, red), (370, 20))
+    win.blit(text.render("Press SPACE to play again", True, green), (360, 50))
+
+def game_over():
+    
 
 
 defender = Player(5, 3)
@@ -214,6 +221,10 @@ while run:
                 enemy.bullets.remove(shots)
                 defender.lives -= 1
 
+    if defender.lives == 0:
+        game_over()
+
     pygame.display.update()
 
 pygame.quit()
+
