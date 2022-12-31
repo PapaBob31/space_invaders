@@ -1,7 +1,5 @@
-
 import pygame
 import random
-import copy
 pygame.init()
 width = 1000
 height = 650
@@ -64,126 +62,103 @@ class Invaders:
         self.vel_y = 5
         self.width = 40
         self.height = 40
-        self.bullet_pos = []
+        self.invaders_that_can_shoot = []
         self.bullets = []
-        self.empty_columns = []
-        self.no_of_columns = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        self.all_invaders_are_dead = False
+        self.coordinates = [[115, 20, 0], [185, 20, 1], [255, 20, 2], [325, 20, 3], [395, 20, 4], [465, 20, 5], [535, 20, 6], [605, 20, 7], [675, 20, 8], [745, 20, 9], [815, 20, 10],
+                            [115, 80, 0], [185, 80, 1], [255, 80, 2], [325, 80, 3], [395, 80, 4], [465, 80, 5], [535, 80, 6], [605, 80, 7], [675, 80, 8], [745, 80, 9], [815, 80, 10],
+                            [115, 140, 0], [185, 140, 1], [255, 140, 2], [325, 140, 3], [395, 140, 4], [465, 140, 5], [535, 140, 6], [605, 140, 7], [675, 140, 8], [745, 140, 9], [815, 140, 10],
+                            [115, 200, 0], [185, 200, 1], [255, 200, 2], [325, 200, 3], [395, 200, 4], [465, 200, 5], [535, 200, 6], [605, 200, 7], [675, 200, 8], [745, 200, 9], [815, 200, 10]]
 
-        # Coordinates of all the invaders according to thir rows
-        # the third item is a no (call it column-id) used to identify their columns which will be used later on in the code
-        self.coordinates = [[[115, 20, 0], [185, 20, 1], [255, 20, 2], [325, 20, 3], [395, 20, 4], [465, 20, 5], [535, 20, 6], [605, 20, 7], [675, 20, 8], [745, 20, 9], [815, 20, 10]],
-                            [[115, 80, 0], [185, 80, 1], [255, 80, 2], [325, 80, 3], [395, 80, 4], [465, 80, 5], [535, 80, 6], [605, 80, 7], [675, 80, 8], [745, 80, 9], [815, 80, 10]],
-                            [[115, 140, 0], [185, 140, 1], [255, 140, 2], [325, 140, 3], [395, 140, 4], [465, 140, 5], [535, 140, 6], [605, 140, 7], [675, 140, 8], [745, 140, 9], [815, 140, 10]],
-                            [[115, 200, 0], [185, 200, 1], [255, 200, 2], [325, 200, 3], [395, 200, 4], [465, 200, 5], [535, 200, 6], [605, 200, 7], [675, 200, 8], [745, 200, 9], [815, 200, 10]]]
+        self.last_left =  self.coordinates[33]
+        self.last_right = self.coordinates[-1]
+
+        for i in range(33, 44):
+            self.invaders_that_can_shoot.append(self.coordinates[i])
 
     def create_invaders(self):
         for coordinate in self.coordinates:
-            for pos in coordinate:
-                pygame.draw.rect(win, red, (pos[0], pos[1], self.width, self.height))
+            if coordinate:
+                pygame.draw.rect(win, red, (coordinate[0], coordinate[1], self.width, self.height))
+
+    def check_for_collision_with_walls(self):
+        move_invaders_down = False
+
+        if self.vel_x > 0:
+            if self.last_right[0] + self.width >= 1000:
+                self.vel_x = -5
+                move_invaders_down = True
+
+        elif self.vel_x < 0:
+            if self.last_left[0] <= 0:
+                self.vel_x = 5
+                move_invaders_down = True
+
+        if move_invaders_down:
+            for coordinate in self.coordinates:
+                if coordinate:
+                    coordinate[1] += self.vel_y
 
     def move_invaders(self):
-        def check_for_collision():
-            index = 0
-            first_invaders = []
-            last_invaders = []
-            move_down = False
-
-            # Uses the length of the coordinates to append last and first items of each rows to different lists..
-            # in a reversed order, starting from bottom to top
-            for no in range(0, len(self.coordinates)):
-                index -= 1
-                first_invaders.append(self.coordinates[index][0])
-                last_invaders.append(self.coordinates[index][-1])
-
-            if self.vel_x > 0:
-                # loops through the last item of each row to find the one that has reached the right edge of the window
-                for invader in last_invaders:
-                    if invader[0] + self.width >= 1000:
-                        self.vel_x = -5
-                        move_down = True
-                        break
-            elif self.vel_x < 0:
-                # loops through the first item of each row to find the one that has reached the left edge of the window
-                for invader in first_invaders:
-                    if invader[0] <= 0:
-                        self.vel_x = 5
-                        move_down = True
-                        break
-
-            if move_down:
-                for coordinate in self.coordinates:
-                    # moves each invader horizontally after they collide with any of the edges of the window
-                    for pos in coordinate:
-                        pos[1] += self.vel_y
-
-        if self.coordinates:
-            for coordinate in self.coordinates:
-                # moves each invader vertically
-                for pos in coordinate:
-                    pos[0] += self.vel_x
-                if not coordinate:
-                    # if all the invaders in a list has been killed, the list should be removed from coordinates
-                    self.coordinates.remove(coordinate)
-            check_for_collision()
-
-    def check_position(self):
-        """ Since the last row of the list are possible bullets position,
-            python should search for other invaders with the same column-id as the dead ones
-            from bottom to top and append them to the possible bullets pos (self.bullet_pos) to fill the gaps
-        """
-        empty_columns = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-        for number in list(range(11)):
-            for position in self.coordinates[-1]:
-                if number == position[2]:
-                    empty_columns.remove(number)
-
-        for no in empty_columns:
-            for coordinate in reversed(self.coordinates):
-                for pos in coordinate:
-                    if pos[2] == no:
-                        self.bullet_pos.append(pos.copy())
-                        no = 13
+        self.all_invaders_are_dead = True
+        self.last_right = [0, 0, 0]
+        self.last_left = [0, 0, 10]
+        for coordinate in self.coordinates:
+            if coordinate:
+                if self.vel_x > 0:
+                    if coordinate[2] >= self.last_right[2]:
+                        self.last_right = coordinate
+                elif self.vel_x < 0:
+                    if coordinate[2] <= self.last_left[2]:
+                        self.last_left = coordinate
+                coordinate[0] += self.vel_x
+                self.all_invaders_are_dead = False
+        if self.all_invaders_are_dead:
+            print('game over')
+        self.check_for_collision_with_walls()
 
     def create_bullets(self):
-        if self.coordinates:
-            # Uses the last row invaders positions as posible bullets position
-            self.bullet_pos = copy.deepcopy(self.coordinates[-1])
-            # If invaders still has more than one row
-            if len(self.coordinates) > 1:
-                if len(self.coordinates[-1]) < 11:
-                    self.check_position()
-        
-    def shoot_bullets(self):
-        if self.coordinates:
-            bullet = random.choice(self.bullet_pos)
+        if not self.all_invaders_are_dead:
             if len(self.bullets) < 4:
-                if len(self.bullets) < 1:
-                    self.bullets.append(bullet)
+                bullet = random.choice(self.invaders_that_can_shoot)
                 if len(self.bullets) >= 1:
                     # Prevents invaders bullets from being too close together and clumping together
                     if bullet[1] + 40 <= (self.bullets[-1][1] - 30):
-                        self.bullets.append(bullet)
+                        self.bullets.append(bullet.copy())
 
-            for bullet in self.bullets:
-                pygame.draw.rect(win, red, (bullet[0] + 20, bullet[1] + 20, 5, 20))
-                bullet[1] += 10
-                if bullet[1] + 20 >= 650:
-                    self.bullets.remove(bullet)
+                elif len(self.bullets) < 1:
+                    self.bullets.append(bullet.copy())
 
-def display_game_over_msg():
-    pygame.draw.rect(win, (255, 255, 255), (350, 10, 230, 150))
-    pygame.draw.rect(win, green, (350, 10, 230, 30))
-    win.blit(text.render("GAME OVER!", False, red), (370, 20))
-    win.blit(text.render("Press SPACE to play again", True, green), (360, 50))
+    def shoot_bullets(self):
+        for bullet in self.bullets:
+            pygame.draw.rect(win, red, (bullet[0] + 20, bullet[1] + 20, 5, 20))
+            bullet[1] += 10
+            if bullet[1] + 20 >= 650:
+                self.bullets.remove(bullet)
 
-def game_over():
-    
-
+    def update_edge_invaders(self, invader_index):
+        replace_invader = False
+        for invader in self.invaders_that_can_shoot:
+            if invader is self.coordinates[invader_index]:
+                self.invaders_that_can_shoot.remove(invader)
+                replace_invader = True
+                break
+        self.coordinates[invader_index] = None
+        if not replace_invader:
+            return      
+        for i in range(4):
+            if invader_index > 10:
+                invader_index -= 11
+                if self.coordinates[invader_index]:
+                    self.invaders_that_can_shoot.append(self.coordinates[invader_index])
+                    break
+            else:
+                break
 
 defender = Player(5, 3)
 enemy = Invaders()
 while run:
-    pygame.time.delay(30)
+    pygame.time.delay(22)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
@@ -191,24 +166,27 @@ while run:
     win.fill((20, 20, 20))
     win.blit(text.render("LIVES: " + str(defender.lives), True, (0, 255, 0)), (930, 5))
     win.blit(text.render("SCORE: " + str(score), True, (0, 255, 0)), (5, 5))
-    defender.create_bullets()
-    defender.shoot()
     enemy.create_invaders()
     enemy.move_invaders()
-    enemy.create_bullets()
     defender.create_player()
     defender.move_player()
+    enemy.create_bullets()
     enemy.shoot_bullets()
+    defender.create_bullets()
+    defender.shoot()
 
     # Checks for collision between hero bullets and invaders  
-    for pos_lists in enemy.coordinates:
-        for invader in pos_lists:
-            for bullet in defender.bullets:
-                if bullet[0] in range(invader[0], invader[0]+40):
-                    if bullet[1] in range(invader[1], invader[1]+40):
-                        pos_lists.remove(invader)
-                        defender.bullets.remove(bullet)
-                        score += 1
+    for i in range(len(enemy.coordinates)):
+        if not enemy.coordinates[i]:
+            continue
+        for bullet in defender.bullets:
+            if bullet[0] in range(enemy.coordinates[i][0], enemy.coordinates[i][0]+40):
+                if bullet[1] in range(enemy.coordinates[i][1], enemy.coordinates[i][1]+40):
+                    enemy.update_edge_invaders(i)
+                    defender.bullets.remove(bullet)
+                    score += 1
+                    break
+                    
     
     # Checks for collision between invaders bullets and hero
     for shots in enemy.bullets:
@@ -221,11 +199,6 @@ while run:
                 enemy.bullets.remove(shots)
                 defender.lives -= 1
 
-    if defender.lives == 0:
-        game_over()
-
     pygame.display.update()
 
 pygame.quit()
-
-""""weeeeeeeeeeeeeeee eeeeeeeeeeeeeeeeeee eeeeeeeeeeeee eeeeeeeeeeeeee dweeeee""""
