@@ -22,7 +22,7 @@ class Player:
     head_y = y - 10 # The y coordinate of the top rect
     bullets = []
     game_over = False
-    won = True
+    won = False
     score = 0
 
     @staticmethod
