@@ -2,13 +2,14 @@ import pygame
 import random
 from time import time
 pygame.init()
-width = 1000
-height = 650
+width = 1000 # window width
+height = 650 # window height
 win = pygame.display.set_mode((width, height))
 pygame.display.set_caption('space_invaders')
 red = (255, 0, 0)
 green = (0, 255, 0)
 text = pygame.font.SysFont("Helvetica", 20)
+
 
 class Player:
     """
@@ -23,41 +24,42 @@ class Player:
     head_y = y - 10 # The y coordinate of the top rect
     bullets = []
     game_over = False
-    won = False
+    won = False # Boolean that stores if the Player won or not after game over
     score = 0
     time_died = 0
-    dead_img = pygame.image.load('dead_player.png').convert_alpha()
+    dead_img = pygame.image.load('dead_player.png').convert_alpha() # Image to display after Player dies
     dead = False
-    was_hit = False
-    color = 255
-    animation_start = 0
-    animation_inc = -25
-  
+    was_hit = False  # Boolean that stores if the Player was hit by an Invader bullet or not
+    animation_start = 0  # The time the animation of the Player starts when Player.was_hit is True
+    color = 255      # Stores the part of the Player Rects color that needs to be increased or decreased during animation
+    animation_inc = -25  # Increment/Decrement of the color variable during animation
 
     @staticmethod
     def render():
-        """ Renders the player on the screen """
+        """Renders the player on the screen"""
         Player.head_x = Player.x + 15
         Player.head_y = Player.y - 10
         if Player.was_hit:
-            Player.render_as_blinking()
+            Player.render_as_blinking() # Start Blinking Animation
             return
-        pygame.draw.rect(win, (0, Player.color, 0), (Player.x, Player.y, 40, 10))
         pygame.draw.rect(win, (0, Player.color, 0), (Player.head_x, Player.head_y, 10, 10))
+        pygame.draw.rect(win, (0, Player.color, 0), (Player.x, Player.y, 40, 10))
 
     @staticmethod
     def render_as_blinking():
+        """Animates the Player to be blinking on screen for 3 seconds"""
         pygame.draw.rect(win, (0, Player.color, 0), (Player.x, Player.y, 40, 10))
         pygame.draw.rect(win, (0, Player.color, 0), (Player.head_x, Player.head_y, 10, 10))
 
+        # Increase or decrease Player.color during animation. We are animating Player.color 
         Player.color += Player.animation_inc
 
-        if time() - Player.animation_start < 3:
-            if Player.color == 255:
+        if time() - Player.animation_start < 3: # If animation hasn't lasted 3 seconds
+            if Player.color == 255: # Highest point of animation. Player.color can't be more than 255
                 Player.animation_inc = -25
-            elif Player.color == 30:
+            elif Player.color == 30: # Lowest point of animation. We don't want Player.color to become black
                 Player.animation_inc = 25
-        else:
+        else: # reset to defaults
             Player.was_hit = False
             Player.animation_start = 0
             Player.animation_inc = -25
@@ -101,7 +103,7 @@ class Player:
 
     @staticmethod
     def shoot():
-        """ Renders and Moves each bullet in the Player.bullets list towards the direction of the Invaders """
+        """Renders and Moves each bullet in the Player.bullets list towards the direction of the Invaders"""
         for bullet in Player.bullets:
             pygame.draw.rect(win, green, (bullet[0], bullet[1], 5, 20))
             bullet[1] -= 10
@@ -112,8 +114,10 @@ class Player:
     def explode():
         """Renders the player as if it exploded"""
         if time() - Player.time_died < 0.3:
-            win.blit(Player.dead_img, (Player.x, Player.head_y))
+            # Display dead Player sprite
+            win.blit(Player.dead_img, (Player.x, Player.head_y)) 
         else:
+            # If the dead Player sprite has beed displayed for 0.3 seconds
             Player.game_over = True
             Player.won = False
 
@@ -122,14 +126,14 @@ class Invaders:
     This Class controls and contains all the attributes of every invader in the Game 
     There are 44 Invaders in total divided into 4 rows and 11 columns when rendered 
     """
-    vel_x = 5 # Speed of each invader in the game
-    vel_y = 5
-    width = 40 
-    height = 40
-    dead_invader = pygame.image.load('dead_invader.png').convert_alpha()
+    vel_x = 5   # Horizontal speed of each invader in the game. It will change frequently dring the game
+    vel_y = 5   # Vertical speed of each invader in the game. It is constant
+    width = 40    # Width of each Invader
+    height = 40   # Height of each Invader
+    dead_invader = pygame.image.load('dead_invader.png').convert_alpha() # Dead invader sprite
 
-    # This list stores invaders that are rendered on a position on screen so that no other invader is
-    # in front of them therefore they won't be able to shoot other invaders when shooting at the player
+    # This list stores invaders that can shoot. There are no invaders in front of them when rendered
+    # So hey can't shoot other Invaders, only the Player.
     invaders_that_can_shoot = []
 
     bullets = [] # list storing bullet coordinates for the invaders
@@ -148,7 +152,7 @@ class Invaders:
     last_right = coordinates[-1] # This will be the last invader in the first column of invaders when rendered
 
     # The invaders added to the invaders_that_can_shoot list
-    # will be the last row of invaders when rendered
+    # will be the last row of invaders when rendered from top to bottom
     for i in range(33, 44):
         invaders_that_can_shoot.append(coordinates[i])
 
@@ -157,11 +161,12 @@ class Invaders:
         """ Renders each invader in Invaders.coordinates list on screen """
         for coordinate in Invaders.coordinates:
             if coordinate:
-                if coordinate[2] >= 0:
+                if coordinate[2] >= 0: # If invader is not set to be displayed as dead
                     pygame.draw.rect(win, red, (coordinate[0], coordinate[1], Invaders.width, Invaders.height))
-                elif time() - coordinate[3] < 0.2:
+                elif time() - coordinate[3] < 0.2: # If invader is set to be displayed as dead
                     win.blit(Invaders.dead_invader, (coordinate[0], coordinate[1]))
                 else:
+                    # Stops the Invader from being rendered at all
                     coordinate = None
 
     @staticmethod
@@ -202,18 +207,19 @@ class Invaders:
             if not coordinate:
                 continue
 
+            # if the invader hasn't been killed yet
             if coordinate[2] >= 0:
-                # if the invader hasn't been killed yet
                 if Invaders.vel_x > 0: # If invaders are moving right
                     if coordinate[2] >= Invaders.last_right[2]:
                         Invaders.last_right = coordinate
                 elif Invaders.vel_x < 0: # If invaders are moving left
                     if coordinate[2] <= Invaders.last_left[2]:
                         Invaders.last_left = coordinate
+
                 # if the loop ends without ever executing this expression;
                 # That means all invaders are dead
                 Invaders.all_invaders_are_dead = False
-            coordinate[0] += Invaders.vel_x
+            coordinate[0] += Invaders.vel_x # Moves the Invaders
                      
         if Invaders.all_invaders_are_dead:
            Player.game_over = True
@@ -228,22 +234,25 @@ class Invaders:
         """
         if not Invaders.all_invaders_are_dead:
             if len(Invaders.bullets) < 4:
-                bullet = random.choice(Invaders.invaders_that_can_shoot)
+                position = random.choice(Invaders.invaders_that_can_shoot)
                 if len(Invaders.bullets) >= 1:
-                    if bullet[1] + 40 <= (Invaders.bullets[-1][1] - 30):
-                        # This allows bullets to be at a certain distance from each other when moving
-                        Invaders.bullets.append(bullet.copy())
-                elif len(Invaders.bullets) < 1:
-                    Invaders.bullets.append(bullet.copy())
+                    if (Invaders.bullets[-1][1] - 30) < position[1] + 40:
+                        return # This allows bullets to be at a certain distance from each other when moving
+                bullet = position.copy()
+                bullet[0] += 20 # This will make the bullet come out of the centre of the invader when rendered
+                bullet[1] += 20 # This will make the bullet come out of the centre of the invader when rendered
+                bullet.pop(2) 
+                Invaders.bullets.append(bullet)
 
     @staticmethod
     def shoot_bullets():
         """Renders and Moves each bullet in the Invaders.bullets list towards the direction of the Player"""
-        for bullet in Invaders.bullets:
-            pygame.draw.rect(win, red, (bullet[0] + 20, bullet[1] + 20, 5, 20))
-            bullet[1] += 10
-            if bullet[1] + 20 >= 650: # if the bullet has left the screen
-                Invaders.bullets.remove(bullet)
+        if Invaders.bullets:
+            for bullet in Invaders.bullets:
+                pygame.draw.rect(win, red, (bullet[0], bullet[1], 5, 20))
+                bullet[1] += 10
+                if bullet[1] + 20 >= 650: # if the bullet has left the screen
+                    Invaders.bullets.remove(bullet)
 
     @staticmethod
     def update_invaders_that_can_shoot(invader_index):
@@ -257,8 +266,10 @@ class Invaders:
                 Invaders.invaders_that_can_shoot.remove(invader)
                 replace_invader = True
                 break
-        Invaders.coordinates[invader_index][2] = -1  # Setting it as -1 marks it as a dead Invader
-        Invaders.coordinates[invader_index].append(time())
+        # Setting it as -1 marks it as a dead Invader. A dead Invader sprite will be rendered in it's position 
+        Invaders.coordinates[invader_index][2] = -1 
+        # The time appended will be used to get how long the dead Invader sprite has been displayed on screen
+        Invaders.coordinates[invader_index].append(time()) 
         if not replace_invader:
             return      
         for i in range(4): # Since there are only 4 invaders in a column
@@ -282,7 +293,7 @@ def display_game_over_msg():
         win.blit(text.render("You won! All invaders are dead.", True, (50, 50, 50)), (380, 360))
     else:
         pygame.draw.rect(win, red, (350, 300, 300, 30))
-        win.blit(text.render("You Lost! The invaders finished you off.", True, (50, 50, 50)), (360, 360))
+        win.blit(text.render("You Lost! The invaders defeated you.", True, (50, 50, 50)), (360, 360))
     win.blit(text.render("GAME OVER!", False, (50, 50, 50)), (430, 305))
 
 def player_shoots_invader():
@@ -302,26 +313,28 @@ def player_shoots_invader():
 
 def invader_shoots_player():
     """Checks for collision between invaders bullets and Player"""
-    for shots in Invaders.bullets[:]:
-        if (shots[0] + 5) >= Player.head_x and (shots[0] + 5) <= Player.head_x+10:
-            if (shots[1] + 20) >= Player.head_y and (shots[1] + 20) <= Player.head_y+10:
-                Invaders.bullets.remove(shots)
-                Player.lives -= 1
-                Player.was_hit = True
-                Player.animation_start = time()
-        elif (shots[0] + 5) >= Player.x and (shots[0] + 5) <= Player.x+40:
-            if (shots[1] + 20) >= Player.y and (shots[1] + 20) <= Player.y+20:
-                Invaders.bullets.remove(shots)
-                Player.lives -= 1
-                Player.was_hit = True
-                Player.animation_start = time()
+    if Player.was_hit:
+        return
+    for shot in Invaders.bullets[:]:
+        if shot[0] in range(Player.head_x, Player.head_x+10) and Player.head_y in range(shot[1], shot[1]+20):
+            Invaders.bullets.remove(shot)
+            Player.lives -= 1
+            Player.was_hit = True
+            Player.animation_start = time()
+
+        elif shot[0] in range(Player.x, Player.x+40) and Player.y in range(shot[1], shot[1]+20):
+            Invaders.bullets.remove(shot)
+            Player.lives -= 1
+            Player.was_hit = True
+            Player.animation_start = time()
+
         if Player.lives == 0:
             Player.dead = True
             Player.time_died = time()
 
 run = True
-while run:
-    pygame.time.Clock().tick(50)
+while run: # Main game loop
+    pygame.time.Clock().tick(60)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
@@ -341,7 +354,10 @@ while run:
         Player.move()
         Invaders.create_bullets()
         Invaders.shoot_bullets()
-        Player.create_bullets()
+        if not Player.was_hit: 
+            # Player shouldn't create bullets during blinking animation 
+            # but can shoot if the bullet has already been created before then
+            Player.create_bullets()
         Player.shoot()
         player_shoots_invader()
         invader_shoots_player()
