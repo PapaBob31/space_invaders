@@ -7,3 +7,12 @@ The dead_invader.png and dead_player.png sprites were created with [GIMP](https:
 #### Controls for the game
 - **Left and Right Arrow keys**: Moves the Player in the respective direction
 - **Space Bar**: Player shoots at Invaders
+
+#### Game Play
+- You have 3 lives in the game.
+- Shoot invaders as they shoot you.
+- If you get hit by an Invader's bullet, You lose a life.
+- If you shoot an Invader, It dies/disappears.
+- If you kill all invaders, you win.
+- If you lose all your lives before killing all invaders, You lose.
+- If an Invader gets to or croses the same plane as you; You lose.
