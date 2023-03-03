@@ -132,29 +132,35 @@ class Invaders:
     height = 40   # Height of each Invader
     dead_invader = pygame.image.load('dead_invader.png').convert_alpha() # Dead invader sprite
 
-    # This list stores invaders that can shoot. There are no invaders in front of them when rendered
-    # So they can't shoot other Invaders, only the Player.
+    # Stores coordinates of invaders that are allowed to shoot. There are no invaders in front
+    # of them when rendered So they can't shoot other Invaders, only the Player.
     invaders_that_can_shoot = []
 
     bullets = [] # Stores bullet coordinates for the invaders
     all_invaders_are_dead = False
+    coordinates = []
+    last_left = []
+    last_right = []
 
-    # Each list item in coordinates stores the needed data of each invader to be rendered
-    # The first and second items in each list stores the x and y positions respectively while the
-    # third item stores the column at which the invader is located; this will be used later in the code.
-    coordinates = [[115, 20, 0], [185, 20, 1], [255, 20, 2], [325, 20, 3], [395, 20, 4], [465, 20, 5], [535, 20, 6], [605, 20, 7], [675, 20, 8], [745, 20, 9], [815, 20, 10],
-                   [115, 80, 0], [185, 80, 1], [255, 80, 2], [325, 80, 3], [395, 80, 4], [465, 80, 5], [535, 80, 6], [605, 80, 7], [675, 80, 8], [745, 80, 9], [815, 80, 10],
-                   [115, 140, 0], [185, 140, 1], [255, 140, 2], [325, 140, 3], [395, 140, 4], [465, 140, 5], [535, 140, 6], [605, 140, 7], [675, 140, 8], [745, 140, 9], [815, 140, 10],
-                   [115, 200, 0], [185, 200, 1], [255, 200, 2], [325, 200, 3], [395, 200, 4], [465, 200, 5], [535, 200, 6], [605, 200, 7], [675, 200, 8], [745, 200, 9], [815, 200, 10]]
+    @staticmethod
+    def init_invaders_properties():
+        """Sets the default values for Invaders properties"""
+
+        # The first and second items in each of the nested lists stores the x and y positions respectively
+        # while the third item stores the column at which the invader is located.
+        Invaders.coordinates = [[115, 20, 0], [185, 20, 1], [255, 20, 2], [325, 20, 3], [395, 20, 4], [465, 20, 5], [535, 20, 6], [605, 20, 7], [675, 20, 8], [745, 20, 9], [815, 20, 10],
+                       [115, 80, 0], [185, 80, 1], [255, 80, 2], [325, 80, 3], [395, 80, 4], [465, 80, 5], [535, 80, 6], [605, 80, 7], [675, 80, 8], [745, 80, 9], [815, 80, 10],
+                       [115, 140, 0], [185, 140, 1], [255, 140, 2], [325, 140, 3], [395, 140, 4], [465, 140, 5], [535, 140, 6], [605, 140, 7], [675, 140, 8], [745, 140, 9], [815, 140, 10],
+                       [115, 200, 0], [185, 200, 1], [255, 200, 2], [325, 200, 3], [395, 200, 4], [465, 200, 5], [535, 200, 6], [605, 200, 7], [675, 200, 8], [745, 200, 9], [815, 200, 10]]
+
+        Invaders.last_left = Invaders.coordinates[33] # Last invader in the first column of invaders when rendered. Used to detect collision with walls
+        Invaders.last_right = Invaders.coordinates[-1] # Last invader in the last column of invaders when rendered. Used to detect collision with walls
+        Invaders.invaders_that_can_shoot = []
+        Invaders.vel_x = 5
+        Invaders.bullets = []
    
-    # Each invader stored in both variables are used to detect collisions with the walls of the game
-    last_left =  coordinates[33] # This will be the last invader in the last column of invaders when rendered
-    last_right = coordinates[-1] # This will be the last invader in the first column of invaders when rendered
-
-    # The invaders added to the invaders_that_can_shoot list
-    # will be the last row of invaders when rendered from top to bottom
-    for i in range(33, 44):
-        invaders_that_can_shoot.append(coordinates[i])
+        for i in range(33, 44):
+            Invaders.invaders_that_can_shoot.append(Invaders.coordinates[i]) # Last row of invaders when rendered from top to bottom
 
     @staticmethod
     def render_invaders():
@@ -162,7 +168,8 @@ class Invaders:
         for coordinate in Invaders.coordinates:
             if coordinate:
                 if coordinate[2] >= 0: # If invader is not set to be displayed as dead
-                    pygame.draw.rect(win, red, (coordinate[0], coordinate[1], Invaders.width, Invaders.height))
+                    pygame.draw.rect(win, red, (coordinate[0], coordinate[1], Invaders.width, Invaders.height)) # Draws the invader
+                    pygame.draw.rect(win, (20, 20, 20), (coordinate[0]+15, coordinate[1]+30, 10, 10)) # This is just a design on each invader
                 elif time() - coordinate[3] < 0.2: # If invader is set to be displayed as dead
                     win.blit(Invaders.dead_invader, (coordinate[0], coordinate[1]))
                 else:
@@ -220,10 +227,16 @@ class Invaders:
                 # That means all invaders are dead
                 Invaders.all_invaders_are_dead = False
             coordinate[0] += Invaders.vel_x # Moves the Invaders
-                     
+
+            # Checks if an Invader has passed or is on the same plane as the Player
+            if coordinate[1] + Invaders.height >= Player.head_y:
+                Player.game_over = True
+                Player.won = False
+
         if Invaders.all_invaders_are_dead:
            Player.game_over = True
            Player.won = True
+           return
         Invaders.check_for_collision_with_walls()
 
     @staticmethod
@@ -241,7 +254,7 @@ class Invaders:
                 bullet = position.copy()
                 bullet[0] += 20 # This will make the bullet come out of the centre of the invader when rendered
                 bullet[1] += 20 # This will make the bullet come out of the centre of the invader when rendered
-                bullet.pop(2) 
+                bullet.pop(2)
                 Invaders.bullets.append(bullet)
 
     @staticmethod
@@ -277,8 +290,7 @@ class Invaders:
             # The program has reached the index of the last invader in a column; all the invaders in that column are dead
                 break
             # A dead invader in invaders_that_can_shoot list can only be replaced by an invader that's  
-            # in the same column with it. Invaders on the same column have indexes that are apart by 11, 
-            # so we are setting the invader_index to the index of the next invader in the column
+            # in the same column with it. Invaders on the same column have indexes that are apart by 11
             invader_index -= 11
             if Invaders.coordinates[invader_index][2] >= 0: # if the invader is not dead
                 Invaders.invaders_that_can_shoot.append(Invaders.coordinates[invader_index])
@@ -295,6 +307,7 @@ def display_game_over_msg():
         pygame.draw.rect(win, red, (350, 300, 300, 30))
         win.blit(text.render("You Lost! The invaders defeated you.", True, (50, 50, 50)), (360, 360))
     win.blit(text.render("GAME OVER!", False, (50, 50, 50)), (430, 305))
+    win.blit(text.render("Press P to play again!", True, (50, 50, 50)), (410, 380))
 
 def player_shoots_invader():
     """Checks for collision between Player bullets and invaders"""
@@ -311,7 +324,6 @@ def player_shoots_invader():
                     Player.score += 1
                     break
                         
-
 def invader_shoots_player():
     """Checks for collision between invaders bullets and Player"""
     if Player.was_hit:
@@ -338,6 +350,21 @@ def invader_shoots_player():
             Player.dead = True
             Player.time_died = time()
 
+def reset_game():
+    """Resets changed game values back to default"""
+    Player.dead = False
+    Player.game_over = False
+    Player.won = False
+    Player.x = 500 
+    Player.y = 550
+    Player.lives = 3
+    Player.bullets = []
+    Player.score = 0
+    Player.time_died = 0
+    Invaders.init_invaders_properties()
+    print(Invaders.invaders_that_can_shoot)
+
+Invaders.init_invaders_properties()
 run = True
 while run: # Main game loop
     pygame.time.Clock().tick(60)
@@ -367,6 +394,9 @@ while run: # Main game loop
         invader_shoots_player()
     else:
         display_game_over_msg()
+        pressed_key = pygame.key.get_pressed()
+        if pressed_key[pygame.K_p]:
+            reset_game()
 
     pygame.display.update()
 
