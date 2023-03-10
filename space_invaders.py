@@ -333,22 +333,24 @@ def invader_shoots_player():
         if shot[0] >= Player.head_x and shot[0] + 5 <= Player.head_x+10:
             if shot[1] + 20 >= Player.head_y and Player.head_y + 10 > shot[1]:
                 # If invader bullet collides with the Player's head Rect
-                Invaders.bullets.remove(shot)
-                Player.lives -= 1
                 Player.was_hit = True
-                Player.animation_start = time()
 
         elif shot[0] >= Player.x and shot[0] + 5 <= Player.x+40:
             if shot[1] + 20 >= Player.y and Player.y + 10 > shot[1]:
-                # If invader bullet collides with the Player's body Rect
-                Invaders.bullets.remove(shot)
-                Player.lives -= 1
+                # If invader bullet collides with the Player's body Rect   
                 Player.was_hit = True
-                Player.animation_start = time()
 
-        if Player.lives == 0:
-            Player.dead = True
-            Player.time_died = time()
+        if Player.was_hit:
+            Invaders.bullets.remove(shot)
+            Player.lives -= 1
+            if Player.lives == 0:
+                Player.dead = True
+                Player.time_died = time()
+                Player.vel = 0
+                return
+            Player.animation_start = time()
+            break
+
 
 def reset_game():
     """Resets changed game values back to default"""
@@ -361,8 +363,8 @@ def reset_game():
     Player.bullets = []
     Player.score = 0
     Player.time_died = 0
+    Player.vel = 5
     Invaders.init_invaders_properties()
-    print(Invaders.invaders_that_can_shoot)
 
 Invaders.init_invaders_properties()
 run = True
