@@ -16,3 +16,6 @@ The dead_invader.png and dead_player.png sprites were created with [GIMP](https:
 - If you kill all invaders, you win.
 - If you lose all your lives before killing all invaders, You lose.
 - If an Invader gets to or croses the same plane as you; You lose.
+
+#### Screenshot
+![gameplay screenshot](/gameplay.png)
